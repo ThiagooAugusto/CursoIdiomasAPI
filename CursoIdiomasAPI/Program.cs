@@ -1,4 +1,6 @@
 using CursoIdiomasAPI.Context;
+using CursoIdiomasAPI.Repositories;
+using CursoIdiomasAPI.Repositories.Intefaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer("name=ConnectionStrings:DefaultConnection"));
+builder.Services.AddScoped<IAlunoRepository,AlunoRepository>();
+builder.Services.AddScoped<ITurmaRepository,TurmaRepository>();
+builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
 
 var app = builder.Build();
 
