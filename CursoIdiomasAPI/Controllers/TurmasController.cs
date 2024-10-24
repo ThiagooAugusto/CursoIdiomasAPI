@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using CursoIdiomasAPI.Models;
 using CursoIdiomasAPI.Models.DTOs;
+using CursoIdiomasAPI.Pagination;
 using CursoIdiomasAPI.Repositories.Intefaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 
 namespace CursoIdiomasAPI.Controllers
@@ -54,6 +56,23 @@ namespace CursoIdiomasAPI.Controllers
             return Ok(turmaDTO);
         }
 
+
+        [HttpGet("pagination")]
+        public ActionResult<IEnumerable<TurmaDTO>> Get([FromQuery] TurmasParameters turmasParameters)
+        {
+            var turmas = _unitOfWork.TurmaRepository.GetTurmasPages(turmasParameters);
+
+           return ObterTurmas(turmas);
+        }
+
+        [HttpGet("pagination/filter/quantidadeAlunos")]
+        public ActionResult<IEnumerable<TurmaDTO>> GetTurmasFiltradas([FromQuery] TurmasFiltroNumeroAlunos turmasParams) 
+        {
+            var turmas = _unitOfWork.TurmaRepository.GetTurmasFiltroNumeroAlunos(turmasParams);
+            
+            return ObterTurmas(turmas);
+        }
+
         [HttpPost]
         public ActionResult<TurmaDTO> Post(TurmaCreateDTO turmaDTO)
         {
@@ -87,6 +106,25 @@ namespace CursoIdiomasAPI.Controllers
             var turmaDTO = _mapper.Map<TurmaDTO>(turmaDeletada);
             return Ok(turmaDTO);
             
+        }
+
+        private ActionResult<IEnumerable<TurmaDTO>> ObterTurmas(PagedList<Turma> turmas)
+        {
+            var metadata = new
+            {
+                turmas.TotalCount,
+                turmas.PageSize,
+                turmas.CurrentPage,
+                turmas.TotalPages,
+                turmas.HasNext,
+                turmas.HasPrevious
+            };
+
+            //adicionar metadados ao cabeçalho da resposta
+            Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+            var turmasDto = _mapper.Map<IEnumerable<TurmaDTO>>(turmas);
+            return Ok(turmasDto);
         }
     }
 }

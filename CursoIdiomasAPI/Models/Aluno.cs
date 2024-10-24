@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace CursoIdiomasAPI.Models
 {
@@ -26,6 +27,7 @@ namespace CursoIdiomasAPI.Models
         [StringLength(50)]
         public string Email {  get; set; }
 
+        [JsonIgnore]
         public List<Turma> Turmas { get; set; } = [];
 
     }

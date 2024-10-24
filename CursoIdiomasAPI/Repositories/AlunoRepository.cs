@@ -1,5 +1,6 @@
 ﻿using CursoIdiomasAPI.Context;
 using CursoIdiomasAPI.Models;
+using CursoIdiomasAPI.Pagination;
 using CursoIdiomasAPI.Repositories.Intefaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,38 @@ namespace CursoIdiomasAPI.Repositories
         {
             return _context.Alunos.AsNoTracking();
         }
+        //public IEnumerable<Aluno> GetAlunosPages(AlunosParameters alunosParams)
+        //{
+        //    return GetAll()
+        //        .OrderBy(p=>p.Nome)
+        //        .Skip((alunosParams.PageNumber -1) * alunosParams.PageSize)
+        //        .Take(alunosParams.PageSize).ToList();
+        //}
+
+        //Mudança da lógica de paginação para a classe PagedList<T>
+        public PagedList<Aluno> GetAlunosPages(AlunosParameters alunosParameters)
+        {
+           
+            var alunos = GetAll().OrderBy(p => p.AlunoId).AsQueryable();
+
+            var alunosOrdenados = PagedList<Aluno>.ToPagedList(alunos,
+                       alunosParameters.PageNumber, alunosParameters.PageSize);
+
+            return alunosOrdenados;
+        }
+
+        public PagedList<Aluno> GetAlunosNomeFiltro(AlunosFiltroNome alunosParams)
+        {
+            var alunos = GetAll().AsQueryable();
+
+            if(!string.IsNullOrEmpty(alunosParams.Nome))
+                alunos = alunos.Where(a=>a.Nome.Contains(alunosParams.Nome));
+
+            //paginação dos dados filtrados
+            var alunosFiltrados = PagedList<Aluno>.ToPagedList(alunos, alunosParams.PageNumber, alunosParams.PageSize);
+
+            return alunosFiltrados;
+        }
         public Aluno Add(Aluno aluno)
         {
             _context.Add(aluno);
@@ -41,5 +74,7 @@ namespace CursoIdiomasAPI.Repositories
             _context.Update(aluno);
             return aluno;
         }
+
+       
     }
 }

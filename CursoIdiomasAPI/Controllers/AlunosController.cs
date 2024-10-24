@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using CursoIdiomasAPI.Models;
 using CursoIdiomasAPI.Models.DTOs;
+using CursoIdiomasAPI.Pagination;
 using CursoIdiomasAPI.Repositories.Intefaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace CursoIdiomasAPI.Controllers
 {
@@ -52,6 +54,32 @@ namespace CursoIdiomasAPI.Controllers
 
             var alunoDTO = _mapper.Map<AlunoDTO>(aluno);
             return Ok(alunoDTO);
+        }
+
+        //[HttpGet("pagination")]
+        //public ActionResult<IEnumerable<AlunoDTO>> Get([FromQuery] AlunosParameters alunosParams)
+        //{
+        //    var alunos = _unitOfWork.AlunoRepository.GetAlunosPages(alunosParams);
+
+        //    var alunosDTO = _mapper.Map<IEnumerable<AlunoDTO>>(alunos);
+
+        //    return Ok(alunosDTO);
+        //}
+
+
+        [HttpGet("pagination")]
+        public ActionResult<IEnumerable<AlunoDTO>> Get([FromQuery] AlunosParameters alunosParameters)
+        {
+            var alunos = _unitOfWork.AlunoRepository.GetAlunosPages(alunosParameters);
+
+            return ObterAlunos(alunos);
+        }
+
+        [HttpGet("pagination/nome/filter")]
+        public ActionResult<IEnumerable<AlunoDTO>> GetAlunosFiltrados([FromQuery] AlunosFiltroNome alunosFiltro)
+        {
+            var alunos = _unitOfWork.AlunoRepository.GetAlunosNomeFiltro(alunosFiltro);
+            return ObterAlunos(alunos);
         }
 
         [HttpPost("turmas/{id}")]
@@ -124,6 +152,25 @@ namespace CursoIdiomasAPI.Controllers
             var alunoDeletadoDTO = _mapper.Map<AlunoDTO>(alunoDeletado);
 
             return Ok(alunoDeletadoDTO);
+        }
+
+        //Adiciona metadados da paginação ao cabeçalho da resposta
+        private ActionResult<IEnumerable<AlunoDTO>> ObterAlunos(PagedList<Aluno> alunos)
+        {
+            var metadata = new
+            {
+                alunos.TotalCount,
+                alunos.PageSize,
+                alunos.CurrentPage,
+                alunos.TotalPages,
+                alunos.HasNext,
+                alunos.HasPrevious
+            };
+
+            Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+            var alunosDto = _mapper.Map<IEnumerable<AlunoDTO>>(alunos);
+            return Ok(alunosDto);
         }
     }
 }
