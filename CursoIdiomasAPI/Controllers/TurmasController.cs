@@ -23,18 +23,18 @@ namespace CursoIdiomasAPI.Controllers
             _mapper = mapper;
         }
         [HttpGet]
-        public ActionResult<IEnumerable<TurmaDTO>> Get()
+        public async Task<ActionResult<IEnumerable<TurmaDTO>>> Get()
         {
-            var turmas = _unitOfWork.TurmaRepository.GetAll();
+            var turmas = await _unitOfWork.TurmaRepository.GetAllAsync();
             var turmasDTO = _mapper.Map<IEnumerable<TurmaDTO>>(turmas);
 
             return Ok(turmasDTO);
         }
 
         [HttpGet("{id}",Name ="ObterTurmaPorId")]
-        public ActionResult<Turma> Get(int id) 
+        public async Task<ActionResult<Turma>> Get(int id) 
         {
-            var turma = _unitOfWork.TurmaRepository.Get(t=>t.TurmaId ==  id);
+            var turma = await _unitOfWork.TurmaRepository.GetAsync(t=>t.TurmaId ==  id);
 
             if(turma == null)
                 return NotFound("Turma não encontrada!");
@@ -44,9 +44,9 @@ namespace CursoIdiomasAPI.Controllers
             return Ok(turmaDTO);
         }
         [HttpGet("codigo/{codigo}", Name = "ObterTurmaPorCodigo")]
-        public ActionResult<Turma> Get(string codigo)
+        public async  Task<ActionResult<Turma>> Get(string codigo)
         {
-            var turma = _unitOfWork.TurmaRepository.Get(t => t.Codigo == codigo);
+            var turma = await _unitOfWork.TurmaRepository.GetAsync(t => t.Codigo == codigo);
 
             if (turma == null)
                 return NotFound("Turma não encontrada!");
@@ -58,23 +58,23 @@ namespace CursoIdiomasAPI.Controllers
 
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<TurmaDTO>> Get([FromQuery] TurmasParameters turmasParameters)
+        public async Task<ActionResult<IEnumerable<TurmaDTO>>> Get([FromQuery] TurmasParameters turmasParameters)
         {
-            var turmas = _unitOfWork.TurmaRepository.GetTurmasPages(turmasParameters);
+            var turmas = await _unitOfWork.TurmaRepository.GetTurmasPagesAsync(turmasParameters);
 
            return ObterTurmas(turmas);
         }
 
         [HttpGet("pagination/filter/quantidadeAlunos")]
-        public ActionResult<IEnumerable<TurmaDTO>> GetTurmasFiltradas([FromQuery] TurmasFiltroNumeroAlunos turmasParams) 
+        public async Task<ActionResult<IEnumerable<TurmaDTO>>> GetTurmasFiltradas([FromQuery] TurmasFiltroNumeroAlunos turmasParams) 
         {
-            var turmas = _unitOfWork.TurmaRepository.GetTurmasFiltroNumeroAlunos(turmasParams);
+            var turmas = await _unitOfWork.TurmaRepository.GetTurmasFiltroNumeroAlunosAsync(turmasParams);
             
             return ObterTurmas(turmas);
         }
 
         [HttpPost]
-        public ActionResult<TurmaDTO> Post(TurmaCreateDTO turmaDTO)
+        public async Task<ActionResult<TurmaDTO>> Post(TurmaCreateDTO turmaDTO)
         {
             if (turmaDTO == null)
                 return BadRequest();
@@ -82,7 +82,7 @@ namespace CursoIdiomasAPI.Controllers
             var turma = _mapper.Map<Turma>(turmaDTO);
 
             var turmaCriada = _unitOfWork.TurmaRepository.Add(turma);
-            _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
 
             var turmaCriadaDTO = _mapper.Map<TurmaDTO>(turmaCriada);
 
@@ -90,9 +90,9 @@ namespace CursoIdiomasAPI.Controllers
         }
 
         [HttpDelete]
-        public ActionResult<TurmaDTO> Delete(int id)
+        public async Task<ActionResult<TurmaDTO>> Delete(int id)
         {
-            var turma = _unitOfWork.TurmaRepository.Get(t=>t.TurmaId == id);
+            var turma = await _unitOfWork.TurmaRepository.GetAsync(t => t.TurmaId == id);
 
             if (turma == null)
                 return NotFound("Turma não encontrada!");
@@ -101,7 +101,7 @@ namespace CursoIdiomasAPI.Controllers
                 return BadRequest("Turma não pode ser deletada pois possui alunos!");
 
             var turmaDeletada = _unitOfWork.TurmaRepository.Delete(turma);
-            _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
 
             var turmaDTO = _mapper.Map<TurmaDTO>(turmaDeletada);
             return Ok(turmaDTO);

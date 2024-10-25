@@ -3,6 +3,7 @@ using CursoIdiomasAPI.Models;
 using CursoIdiomasAPI.Pagination;
 using CursoIdiomasAPI.Repositories.Intefaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CursoIdiomasAPI.Repositories
 {
@@ -15,14 +16,14 @@ namespace CursoIdiomasAPI.Repositories
             _context = context;
         }
 
-        public Aluno Get(Func<Aluno, bool> predicate)
+        public async Task<Aluno> GetAsync(Expression<Func<Aluno, bool>> predicate)
         {
-            return _context.Alunos.Include(a=>a.Turmas).FirstOrDefault(predicate);
+            return await _context.Alunos.Include(a=>a.Turmas).FirstOrDefaultAsync(predicate);
         }
 
-        public IEnumerable<Aluno> GetAll()
+        public async Task<IEnumerable<Aluno>> GetAllAsync()
         {
-            return _context.Alunos.AsNoTracking();
+            return await  _context.Alunos.AsNoTracking().ToListAsync();
         }
         //public IEnumerable<Aluno> GetAlunosPages(AlunosParameters alunosParams)
         //{
@@ -33,26 +34,28 @@ namespace CursoIdiomasAPI.Repositories
         //}
 
         //Mudança da lógica de paginação para a classe PagedList<T>
-        public PagedList<Aluno> GetAlunosPages(AlunosParameters alunosParameters)
+        public async Task<PagedList<Aluno>> GetAlunosPagesAsync(AlunosParameters alunosParameters)
         {
-           
-            var alunos = GetAll().OrderBy(p => p.AlunoId).AsQueryable();
 
-            var alunosOrdenados = PagedList<Aluno>.ToPagedList(alunos,
+            var alunos = await GetAllAsync();
+
+            var alunosOrdenados = alunos.OrderBy(p => p.AlunoId).AsQueryable();
+
+            var resultado = PagedList<Aluno>.ToPagedList(alunosOrdenados,
                        alunosParameters.PageNumber, alunosParameters.PageSize);
 
-            return alunosOrdenados;
+            return resultado;
         }
 
-        public PagedList<Aluno> GetAlunosNomeFiltro(AlunosFiltroNome alunosParams)
+        public async Task<PagedList<Aluno>> GetAlunosNomeFiltroAsync(AlunosFiltroNome alunosParams)
         {
-            var alunos = GetAll().AsQueryable();
+            var alunos = await GetAllAsync();
 
             if(!string.IsNullOrEmpty(alunosParams.Nome))
                 alunos = alunos.Where(a=>a.Nome.Contains(alunosParams.Nome));
 
             //paginação dos dados filtrados
-            var alunosFiltrados = PagedList<Aluno>.ToPagedList(alunos, alunosParams.PageNumber, alunosParams.PageSize);
+            var alunosFiltrados = PagedList<Aluno>.ToPagedList(alunos.AsQueryable(), alunosParams.PageNumber, alunosParams.PageSize);
 
             return alunosFiltrados;
         }

@@ -3,6 +3,7 @@ using CursoIdiomasAPI.Models;
 using CursoIdiomasAPI.Pagination;
 using CursoIdiomasAPI.Repositories.Intefaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CursoIdiomasAPI.Repositories
 {
@@ -15,29 +16,31 @@ namespace CursoIdiomasAPI.Repositories
             _context = context;
         }
 
-        public Turma Get(Func<Turma, bool> predicate)
+        public async Task<Turma> GetAsync(Expression <Func <Turma, bool>> predicate)
         {
-            return _context.Turmas.Include(t => t.Alunos).FirstOrDefault(predicate);
+            return await _context.Turmas.Include(t => t.Alunos).FirstOrDefaultAsync(predicate);
         }
 
-        public IEnumerable<Turma> GetAll()
+        public async Task <IEnumerable<Turma>> GetAllAsync()
         {
-            return _context.Turmas.Include(t=>t.Alunos).AsNoTracking();
+            return await _context.Turmas.Include(t=>t.Alunos).AsNoTracking().ToListAsync();
         }
 
-        public PagedList<Turma> GetTurmasPages(TurmasParameters turmasParams)
+        public async Task<PagedList<Turma>> GetTurmasPagesAsync(TurmasParameters turmasParams)
         {
 
-            var turmas = GetAll().OrderBy(p => p.TurmaId).AsQueryable();
+            var turmas = await GetAllAsync();
 
-            var turmasOrdenadas = PagedList<Turma>.ToPagedList(turmas,
+            var turmasOrdenadas = turmas.OrderBy(p => p.TurmaId).AsQueryable();
+
+            var resultado = PagedList<Turma>.ToPagedList(turmasOrdenadas,
                        turmasParams.PageNumber, turmasParams.PageSize);
 
-            return turmasOrdenadas;
+            return resultado;
         }
-        public PagedList<Turma> GetTurmasFiltroNumeroAlunos(TurmasFiltroNumeroAlunos turmasParams)
+        public async Task<PagedList<Turma>> GetTurmasFiltroNumeroAlunosAsync(TurmasFiltroNumeroAlunos turmasParams)
         {
-            var turmas = GetAll().AsQueryable();
+            var turmas = await GetAllAsync();
 
             if (!string.IsNullOrEmpty(turmasParams.CriteriosFiltro) && turmasParams.QuantidadeAlunos.HasValue)
             {
@@ -56,7 +59,7 @@ namespace CursoIdiomasAPI.Repositories
             }
 
             //paginação dos dados filtrados
-            var turmasFiltradas = PagedList<Turma>.ToPagedList(turmas, turmasParams.PageNumber, turmasParams.PageSize);
+            var turmasFiltradas = PagedList<Turma>.ToPagedList(turmas.AsQueryable(), turmasParams.PageNumber, turmasParams.PageSize);
 
             return turmasFiltradas;
         }

@@ -22,9 +22,9 @@ namespace CursoIdiomasAPI.Controllers
             _unitOfWork = unitOfWork;
         }
         [HttpGet]
-        public ActionResult<IEnumerable<AlunoDTO>> Get()
+        public async Task<ActionResult<IEnumerable<AlunoDTO>>> Get()
         {
-            var alunos = _unitOfWork.AlunoRepository.GetAll();
+            var alunos = await _unitOfWork.AlunoRepository.GetAllAsync();
 
             if (alunos == null)
                 return NotFound("Não há alunos cadastrados!");
@@ -34,9 +34,9 @@ namespace CursoIdiomasAPI.Controllers
             return Ok(alunosDTO);
         }
         [HttpGet("{id:int}",Name ="ObterAlunoPorId")]
-        public ActionResult<AlunoDTO> Get(int id) 
+        public async Task<ActionResult<AlunoDTO>> Get(int id) 
         { 
-            var aluno = _unitOfWork.AlunoRepository.Get(a=>a.AlunoId == id);
+            var aluno = await _unitOfWork.AlunoRepository.GetAsync(a => a.AlunoId == id);
 
             if(aluno == null)
                 return NotFound();
@@ -45,9 +45,9 @@ namespace CursoIdiomasAPI.Controllers
             return Ok(alunoDTO);
         }
         [HttpGet("matricula/{matricula}", Name = "ObterAlunoPorMatricula")]
-        public ActionResult<AlunoDTO> Get(string matricula)
+        public async Task<ActionResult<AlunoDTO>> Get(string matricula)
         {
-            var aluno = _unitOfWork.AlunoRepository.Get(a => a.Matricula == matricula);
+            var aluno = await _unitOfWork.AlunoRepository.GetAsync(a => a.Matricula == matricula);
 
             if (aluno == null)
                 return NotFound();
@@ -68,30 +68,30 @@ namespace CursoIdiomasAPI.Controllers
 
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<AlunoDTO>> Get([FromQuery] AlunosParameters alunosParameters)
+        public async Task<ActionResult<IEnumerable<AlunoDTO>>> Get([FromQuery] AlunosParameters alunosParameters)
         {
-            var alunos = _unitOfWork.AlunoRepository.GetAlunosPages(alunosParameters);
+            var alunos = await _unitOfWork.AlunoRepository.GetAlunosPagesAsync(alunosParameters);
 
             return ObterAlunos(alunos);
         }
 
         [HttpGet("pagination/nome/filter")]
-        public ActionResult<IEnumerable<AlunoDTO>> GetAlunosFiltrados([FromQuery] AlunosFiltroNome alunosFiltro)
+        public async Task<ActionResult<IEnumerable<AlunoDTO>>> GetAlunosFiltrados([FromQuery] AlunosFiltroNome alunosFiltro)
         {
-            var alunos = _unitOfWork.AlunoRepository.GetAlunosNomeFiltro(alunosFiltro);
+            var alunos = await _unitOfWork.AlunoRepository.GetAlunosNomeFiltroAsync(alunosFiltro);
             return ObterAlunos(alunos);
         }
 
         [HttpPost("turmas/{id}")]
-        public ActionResult<AlunoDTO> Post(int id, AlunoCreateDTO alunoDTO)
+        public async Task<ActionResult<AlunoDTO>> Post(int id, AlunoCreateDTO alunoDTO)
         {
             //Faz validações de entrada
             if (alunoDTO == null)
                 return BadRequest(); 
 
             //Busca no banco
-            var alunoComCPF = _unitOfWork.AlunoRepository.Get(a=>a.CPF == alunoDTO.CPF);
-            var turma = _unitOfWork.TurmaRepository.Get(a=>a.TurmaId == id);
+            var alunoComCPF = await _unitOfWork.AlunoRepository.GetAsync(a => a.CPF == alunoDTO.CPF);
+            var turma = await _unitOfWork.TurmaRepository.GetAsync(a => a.TurmaId == id);
 
             //Faz verificações dos requisitos para cadastro
             if (alunoComCPF != null)
@@ -115,7 +115,7 @@ namespace CursoIdiomasAPI.Controllers
 
             //Cadastra aluno se verificações passaram
             var alunoCadastrado = _unitOfWork.AlunoRepository.Add(alunoEntity);
-            _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
 
             var alunoCadastradoDTO = _mapper.Map<AlunoDTO>(alunoCadastrado);
             return new CreatedAtRouteResult("ObterAlunoPorId", new { id = alunoCadastrado.AlunoId }, alunoCadastradoDTO);
@@ -123,7 +123,7 @@ namespace CursoIdiomasAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult<AlunoDTO> Put(int id, AlunoUpdateDTO alunoDTO)
+        public async Task<ActionResult<AlunoDTO>> Put(int id, AlunoUpdateDTO alunoDTO)
         {
             if (alunoDTO == null)
                 return BadRequest();
@@ -131,7 +131,7 @@ namespace CursoIdiomasAPI.Controllers
             var aluno = _mapper.Map<Aluno>(alunoDTO);
 
             var alunoAtualizado = _unitOfWork.AlunoRepository.Update(aluno);
-            _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
 
             var alunoAtualizadoDTO = _mapper.Map<AlunoDTO>(alunoAtualizado);
 
@@ -139,15 +139,15 @@ namespace CursoIdiomasAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<AlunoDTO> Delete(int id) 
+        public async Task<ActionResult<AlunoDTO>> Delete(int id) 
         {
-            var aluno = _unitOfWork.AlunoRepository.Get(a=>a.AlunoId == id);
+            var aluno = await _unitOfWork.AlunoRepository.GetAsync(a => a.AlunoId == id);
 
             if (aluno == null)
                 return NotFound("Aluno não encontrado!");
 
             var alunoDeletado = _unitOfWork.AlunoRepository.Delete(aluno);
-            _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
 
             var alunoDeletadoDTO = _mapper.Map<AlunoDTO>(alunoDeletado);
 

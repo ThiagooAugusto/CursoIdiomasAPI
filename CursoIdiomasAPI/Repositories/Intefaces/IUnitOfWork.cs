@@ -4,7 +4,7 @@
     {
         ITurmaRepository TurmaRepository { get; }
         IAlunoRepository AlunoRepository { get; }
-        void Commit();
+        Task CommitAsync();
         void Dispose();
     }
 }
