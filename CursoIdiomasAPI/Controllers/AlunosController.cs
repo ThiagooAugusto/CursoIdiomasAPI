@@ -125,6 +125,9 @@ namespace CursoIdiomasAPI.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<AlunoDTO>> Put(int id, AlunoUpdateDTO alunoDTO)
         {
+            if (alunoDTO.AlunoId != id)
+                return BadRequest();
+
             if (alunoDTO == null)
                 return BadRequest();
 
